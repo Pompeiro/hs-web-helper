@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    volumes:
+      - ./helper:/app/helper
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; uvicorn helper:app --host 0.0.0.0 --reload'
+    ports:
+      - 8000:8000
+    environment:
+      - DATABASE_URL=postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:5432/${DATABASE_NAME}
+    depends_on:
+      - db
+    env_file:
+      - .env
+  db:
+    restart: always
+    image: postgres:13-alpine
+    ports:
+      - 5432:5432
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_HOST=${DATABASE_HOST}
